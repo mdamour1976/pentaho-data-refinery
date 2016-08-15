@@ -24,6 +24,8 @@ package org.pentaho.di.trans.steps.annotation;
 
 import org.apache.commons.lang.StringUtils;
 import org.pentaho.agilebi.modeler.models.annotations.ModelAnnotationGroup;
+import org.pentaho.di.core.exception.KettleException;
+import org.pentaho.di.i18n.BaseMessages;
 import org.pentaho.di.trans.Trans;
 import org.pentaho.di.trans.TransMeta;
 import org.pentaho.di.trans.step.StepDataInterface;
@@ -61,6 +63,19 @@ public class SharedDimensionStep extends ModelAnnotationStep implements StepInte
     meta.getModelAnnotations().setName( meta.getModelAnnotationCategory() );
     modelAnnotations.addInjectedAnnotations( meta.createDimensionKeyAnnotations );
     modelAnnotations.addInjectedAnnotations( meta.createAttributeAnnotations );
+
+    try {
+      ModelAnnotationData modelAnnotationData = (ModelAnnotationData) sdi;
+      if ( meta.isSharedDimension()
+          && !super.isOutputStepFound( meta.getTargetOutputStep() ) ) {
+        log.logError( BaseMessages.getString( PKG, "ModelAnnotation.Runtime.MissingDataProvider" )  );
+      } else {
+        modelAnnotationData.annotations = super.processAnnotations( meta );
+      }
+    } catch ( KettleException ke ) {
+      setAnnotationValidationException( ke );
+      log.logError( ke.getMessage()  );
+    }
 
     try {
       meta.saveToMetaStore( getMetaStore() );

@@ -50,6 +50,8 @@ public class ModelAnnotationStep extends BaseStep implements StepInterface {
 
   private static final Class<?> PKG = ModelAnnotationMeta.class;
 
+  private KettleException annotationValidationException;
+
   /**
    * This is the base step that forms that basis for all steps. You can derive from this class to implement your own
    * steps.
@@ -69,19 +71,9 @@ public class ModelAnnotationStep extends BaseStep implements StepInterface {
   @Override
   public boolean processRow( final StepMetaInterface smi, final StepDataInterface sdi )
     throws KettleException {
-
-
     Object[] row = getRow();
-    if ( first && row != null ) {
-      first = false;
-      BaseAnnotationMeta modelAnnotationMeta = (BaseAnnotationMeta) smi;
-      ModelAnnotationData modelAnnotationData = (ModelAnnotationData) sdi;
-      if ( modelAnnotationMeta.isSharedDimension()
-          && !isOutputStepFound( modelAnnotationMeta.getTargetOutputStep() ) ) {
-        log.logError( BaseMessages.getString( PKG, "ModelAnnotation.Runtime.MissingDataProvider" )  );
-      } else {
-        modelAnnotationData.annotations = processAnnotations( modelAnnotationMeta );
-      }
+    if ( annotationValidationException != null ) {
+      throw annotationValidationException;
     }
     if ( row == null ) { // no more input to be expected...
       setOutputDone();
@@ -97,7 +89,7 @@ public class ModelAnnotationStep extends BaseStep implements StepInterface {
    * @param modelAnnotationMeta
    * @throws KettleException
    */
-  private ModelAnnotationGroup processAnnotations( BaseAnnotationMeta modelAnnotationMeta ) throws KettleException {
+  public ModelAnnotationGroup processAnnotations( BaseAnnotationMeta modelAnnotationMeta ) throws KettleException {
 
     ModelAnnotationGroup currentGroup;
     if ( isGroupLinked( modelAnnotationMeta ) ) {
@@ -188,7 +180,7 @@ public class ModelAnnotationStep extends BaseStep implements StepInterface {
     }
   }
 
-  private boolean isOutputStepFound( final String outputStep ) throws KettleException {
+  public boolean isOutputStepFound( final String outputStep ) throws KettleException {
     if ( !Const.isEmpty( outputStep ) ) {
       for ( StepMetaDataCombi outCombi : getTrans().getSteps() ) {
         if ( outCombi.stepname.equals( environmentSubstitute( outputStep ) ) ) {
@@ -224,6 +216,19 @@ public class ModelAnnotationStep extends BaseStep implements StepInterface {
       modelAnnotations.addInjectedAnnotations( meta.createCalcMeasureAnnotations );
     }
 
+    try {
+      ModelAnnotationData modelAnnotationData = (ModelAnnotationData) sdi;
+      if ( meta.isSharedDimension()
+          && !isOutputStepFound( meta.getTargetOutputStep() ) ) {
+        log.logError( BaseMessages.getString( PKG, "ModelAnnotation.Runtime.MissingDataProvider" )  );
+      } else {
+        modelAnnotationData.annotations = processAnnotations( meta );
+      }
+    } catch ( KettleException ke ) {
+      annotationValidationException = ke;
+      log.logError( ke.getMessage() );
+    }
+
     final boolean superInit = super.init( smi, sdi );
     return superInit;
   }
@@ -231,4 +236,13 @@ public class ModelAnnotationStep extends BaseStep implements StepInterface {
   public boolean baseInit( final StepMetaInterface smi, final StepDataInterface sdi ) {
     return super.init( smi, sdi );
   }
+
+  public KettleException getAnnotationValidationException() {
+    return annotationValidationException;
+  }
+
+  public void setAnnotationValidationException( KettleException ke ) {
+    annotationValidationException = ke;
+  }
+
 }

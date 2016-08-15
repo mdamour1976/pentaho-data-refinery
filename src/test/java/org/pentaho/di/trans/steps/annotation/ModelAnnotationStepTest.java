@@ -98,6 +98,7 @@ public class ModelAnnotationStepTest {
     modelAnnotationMeta.setModelAnnotations( modelAnnotations );
     doNothing().when( modelAnnotation ).putRow( null, new Object[]{} );
 
+    modelAnnotation.init( modelAnnotationMeta, stepDataInterface );
     modelAnnotation.processRow( modelAnnotationMeta, stepDataInterface );
     ModelAnnotationGroup actualAnnotations =
         (ModelAnnotationGroup) modelAnnotation.getExtensionDataMap().get( JobEntryBuildModel.KEY_MODEL_ANNOTATIONS );
@@ -109,6 +110,7 @@ public class ModelAnnotationStepTest {
     modelAnnotations.add( annotationMock2 );
     modelAnnotation.first = true;
 
+    modelAnnotation.init( modelAnnotationMeta, stepDataInterface );
     modelAnnotation.processRow( modelAnnotationMeta, stepDataInterface );
     actualAnnotations =
         (ModelAnnotationGroup) modelAnnotation.getExtensionDataMap().get( JobEntryBuildModel.KEY_MODEL_ANNOTATIONS );
@@ -132,6 +134,7 @@ public class ModelAnnotationStepTest {
     modelAnnotationMeta.setModelAnnotations( modelAnnotations );
     doNothing().when( modelAnnotation ).putRow( null, new Object[]{} );
 
+    modelAnnotation.init( modelAnnotationMeta, stepDataInterface );
     modelAnnotation.processRow( modelAnnotationMeta, stepDataInterface );
     ModelAnnotationGroup actualAnnotations =
         (ModelAnnotationGroup) modelAnnotation.getExtensionDataMap().get( JobEntryBuildModel.KEY_MODEL_ANNOTATIONS );
@@ -143,6 +146,7 @@ public class ModelAnnotationStepTest {
     modelAnnotations.add( annotationMock2 );
     modelAnnotation.first = true;
 
+    modelAnnotation.init( modelAnnotationMeta, stepDataInterface );
     modelAnnotation.processRow( modelAnnotationMeta, stepDataInterface );
     actualAnnotations =
         (ModelAnnotationGroup) modelAnnotation.getExtensionDataMap().get( JobEntryBuildModel.KEY_MODEL_ANNOTATIONS );
@@ -189,6 +193,7 @@ public class ModelAnnotationStepTest {
     modelAnnotationMeta.setModelAnnotationCategory( groupName );
 
     // run
+    modelAnnotation.init( modelAnnotationMeta, stepDataInterface );
     modelAnnotation.processRow( modelAnnotationMeta, stepDataInterface );
     ModelAnnotationGroup actualAnnotations =
         (ModelAnnotationGroup) modelAnnotation.getExtensionDataMap().get( JobEntryBuildModel.KEY_MODEL_ANNOTATIONS );
@@ -237,6 +242,7 @@ public class ModelAnnotationStepTest {
     modelAnnotationMeta.setModelAnnotationCategory( groupName );
 
     // run
+    modelAnnotation.init( modelAnnotationMeta, stepDataInterface );
     modelAnnotation.processRow( modelAnnotationMeta, stepDataInterface );
     ModelAnnotationGroup actualAnnotations =
         (ModelAnnotationGroup) modelAnnotation.getExtensionDataMap().get( JobEntryBuildModel.KEY_MODEL_ANNOTATIONS );
@@ -269,6 +275,7 @@ public class ModelAnnotationStepTest {
 
     // run
     try {
+      modelAnnotation.init( modelAnnotationMeta, stepDataInterface );
       modelAnnotation.processRow( modelAnnotationMeta, stepDataInterface );
       Assert.fail();
     } catch ( KettleException e ) {
@@ -301,6 +308,7 @@ public class ModelAnnotationStepTest {
 
     // run
     try {
+      modelAnnotation.init( modelAnnotationMeta, stepDataInterface );
       modelAnnotation.processRow( modelAnnotationMeta, stepDataInterface );
       Assert.fail();
     } catch ( KettleException e ) {
@@ -338,6 +346,7 @@ public class ModelAnnotationStepTest {
     when( modelAnnotation.getInputRowMeta() ).thenReturn( okMeta );
     doNothing().when( modelAnnotation ).putRow( okMeta, new Object[]{} );
 
+    modelAnnotation.init( modelAnnotationMeta, stepDataInterface );
     modelAnnotation.processRow( modelAnnotationMeta, stepDataInterface );
 
     // fail
@@ -348,6 +357,7 @@ public class ModelAnnotationStepTest {
     when( modelAnnotation.getInputRowMeta() ).thenReturn( badMeta );
     doNothing().when( modelAnnotation ).putRow( badMeta, new Object[]{} );
     try {
+      modelAnnotation.init( modelAnnotationMeta, stepDataInterface );
       modelAnnotation.processRow( modelAnnotationMeta, stepDataInterface );
       Assert.fail( "not validated" );
     } catch ( KettleException e ) {
@@ -359,6 +369,7 @@ public class ModelAnnotationStepTest {
     when( modelAnnotation.getInputRowMeta() ).thenReturn( badMeta );
     doNothing().when( modelAnnotation ).putRow( badMeta, new Object[]{} );
     cm.setAggregateType( AggregationType.COUNT );
+    modelAnnotation.init( modelAnnotationMeta, stepDataInterface );
     modelAnnotation.processRow( modelAnnotationMeta, stepDataInterface );
 
     // count distinct is fine for non-numeric
@@ -366,6 +377,7 @@ public class ModelAnnotationStepTest {
     when( modelAnnotation.getInputRowMeta() ).thenReturn( badMeta );
     doNothing().when( modelAnnotation ).putRow( badMeta, new Object[]{} );
     cm.setAggregateType( AggregationType.COUNT_DISTINCT );
+    modelAnnotation.init( modelAnnotationMeta, stepDataInterface );
     modelAnnotation.processRow( modelAnnotationMeta, stepDataInterface );
 
     // fail. does not support maximum
@@ -374,6 +386,7 @@ public class ModelAnnotationStepTest {
     doNothing().when( modelAnnotation ).putRow( badMeta, new Object[]{} );
     cm.setAggregateType( AggregationType.MAXIMUM );
     try {
+      modelAnnotation.init( modelAnnotationMeta, stepDataInterface );
       modelAnnotation.processRow( modelAnnotationMeta, stepDataInterface );
       Assert.fail( "not validated" );
     } catch ( KettleException e ) {
@@ -383,7 +396,6 @@ public class ModelAnnotationStepTest {
 
   @Test
   public void testOutputStepIsEmpty() throws Exception {
-
     // step
     StepDataInterface stepDataInterface = new ModelAnnotationData();
 
@@ -396,6 +408,7 @@ public class ModelAnnotationStepTest {
     modelAnnotationMeta.setModelAnnotationCategory( "someGroup" );
     modelAnnotationMeta.setSharedDimension( true );
 
+    modelAnnotation.init( modelAnnotationMeta, stepDataInterface );
     modelAnnotation.processRow( modelAnnotationMeta, stepDataInterface );
     verify( mockLog ).logError( "Please select a valid data provider step.");
   }
@@ -404,13 +417,17 @@ public class ModelAnnotationStepTest {
   public void testAnnotationsOnlyWrittenOnValidRow() throws Exception {
     StepDataInterface stepDataInterface = new ModelAnnotationData();
     ModelAnnotationStep modelAnnotation = createOneShotStep( stepDataInterface, null, null, true, null );
+    ModelAnnotationMeta modelAnnotationMeta = new ModelAnnotationMeta();
+    modelAnnotationMeta.setDefault();
+    modelAnnotationMeta.setModelAnnotationCategory( "someGroup" );
+    modelAnnotationMeta.setSharedDimension( true );
+    modelAnnotation.init( modelAnnotationMeta, stepDataInterface );
     modelAnnotation.processRow( null, null );
     assertNull( modelAnnotation.getTrans().getExtensionDataMap().get( JobEntryBuildModel.KEY_MODEL_ANNOTATIONS ) );
   }
 
   @Test
   public void testOutputStepIsMissing() throws Exception {
-
     // step
     StepDataInterface stepDataInterface = new ModelAnnotationData();
     ModelAnnotationManager modelAnnotationManager = mock( ModelAnnotationManager.class );
@@ -427,6 +444,7 @@ public class ModelAnnotationStepTest {
     modelAnnotationMeta.setModelAnnotationCategory( "someGroup" );
     modelAnnotationMeta.setSharedDimension( true );
 
+    modelAnnotation.init( modelAnnotationMeta, stepDataInterface );
     modelAnnotation.processRow( modelAnnotationMeta, stepDataInterface );
     verify( mockLog ).logError( "Please select a valid data provider step." );
   }
